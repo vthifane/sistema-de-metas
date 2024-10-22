@@ -1,11 +1,28 @@
 const {select, input , checkbox} = require('@inquirer/prompts') 
 // select seleciona/escolhe a opção // input recebe uma inserção do usuário // checkbox permite marcar uma ou mais opções
-let meta = {
-    value:'Beber 3 litros de agua por dia', 
-    checked: false
-}
-let metas = [ meta ]
+const fs = require('fs').promises
+
 let mensagem = 'Bem Vinda ao app de metas'
+let metas
+
+const carregarMetas = async () => {
+    try{
+        //a contante dados esta esperando a execução da função do fs: lerArquivo.
+        //o arquivo que esta sendo lido é o "metas.json" do tipo de caracter mais comum o "utf-8"
+        const dados = await fs.readFile("metas.json" , "utf-8")
+        //metas esta recebendo como argumento os dados lidos acima que estão sendo convertidos 
+        //em array através da função do JSON "parse"
+        metas = JSON.parse(dados)
+    }
+    //caso a tentativa dê errado, o chatch retorna a variavel metas como array vazio
+    catch(erro){
+        metas = []
+    }
+}
+// esta função
+const salvarMetas = async () => {
+    await fs.writeFile("metas.json", JSON.stringify(metas, null, 2))
+}
 
 const cadastrarMeta = async () => {
      const meta = await input({message: "Digite a meta:"})
@@ -88,7 +105,7 @@ const metasAbertas = async () => {
 const deletarMeta = async () => {
     //a hof map cria um novo array com modificações
     const metasDesmarcadas = metas.map((meta) => {
-        return {value: meta.value, ckecked: false}
+        return {value: meta.value, checked: false}
     })
     //esta função esta criando um array(metasADeletar), que estará armazenando o array metasDesmarcadas,
     //para marcar(checkbox) as metas que deseja deletar
@@ -126,12 +143,14 @@ const mostrarMensagem = async () => {
 }
 
 const start = async () => {
+    await carregarMetas()
     while(true) {
          mostrarMensagem()
+         await salvarMetas()
         const opcao = await select({
             message: 'Menu',
             choices: [
-            {
+            {   
                 name: 'Cadastrar Meta',
                 value: 'cadastrar'
             },
